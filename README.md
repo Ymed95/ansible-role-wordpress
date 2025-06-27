@@ -1,25 +1,20 @@
-# Ansible Role: WordPress Deployment
+🎯 Rôle Ansible : Déploiement de WordPress
+Ansible Galaxy
 
-[![Ansible Galaxy](https://img.shields.io/badge/galaxy-Ymed95.wordpress-blue.svg)](https://galaxy.ansible.com/Ymed95/wordpress)
+📦 Nom du rôle
+Ymed95.wordpress
 
-## 📦 Role Name
+🧠 Description
+Ce rôle Ansible automatise l’installation et la configuration d’une stack WordPress complète sur des systèmes basés sur Debian et RedHat (Ubuntu, Debian, Rocky Linux, etc.).
 
-**Ymed95.wordpress**
+Il installe et configure :
+- Apache (ou httpd)
+- PHP et ses modules nécessaires
+- MariaDB (avec mot de passe root sécurisé + création d’une base et d’un utilisateur WordPress)
+- WordPress (téléchargement, extraction, configuration)
+- VirtualHost Apache pour WordPress
 
-## 🧠 Description
-
-This Ansible role automates the installation and configuration of a full WordPress stack on both Debian-based and RedHat-based systems (Ubuntu, Debian, Rocky Linux, etc.).
-
-It installs and configures:
-- Apache (or httpd)
-- PHP and required modules
-- MariaDB (with secured root password and a new database/user for WordPress)
-- WordPress (download, unarchive, setup config)
-- Apache VirtualHost for WordPress
-
-## 📁 Role Structure
-
-```bash
+📁 Structure du rôle
 ansible-role-wordpress/
 ├── defaults/
 │   └── main.yml
@@ -35,22 +30,16 @@ ansible-role-wordpress/
 ├── meta/
 │   └── main.yml
 └── README.md
-```
 
-## 📋 Requirements
+📋 Pré-requis
+- Python installé sur la machine cible
+- Accès SSH aux machines cibles
+- Collection community.mysql installée :
+  ansible-galaxy collection install community.mysql
 
-- Python on the target system
-- SSH access to target machine(s)
-- `community.mysql` collection installed:
-```bash
-ansible-galaxy collection install community.mysql
-```
+⚙️ Variables du rôle
+Définies dans vars/main.yml (modifiable si besoin) :
 
-## ⚙️ Role Variables
-
-Defined in `vars/main.yml` (and override if needed):
-
-```yaml
 wordpress_db_name: wordpress
 wordpress_db_user: example
 wordpress_db_password: examplePW
@@ -63,67 +52,42 @@ apache_config_file: wordpress.conf
 wordpress_owner: www-data
 wordpress_group: www-data
 
-apache_package: "{ 'apache2' if ansible_os_family == 'Debian' else 'httpd' }"
-apache_service: "{ 'apache2' if ansible_os_family == 'Debian' else 'httpd' }"
-apache_conf_dir: "{ '/etc/apache2/sites-available' if ansible_os_family == 'Debian' else '/etc/httpd/conf.d' }"
+apache_package: "{ 'apache2' si ansible_os_family == 'Debian' sinon 'httpd' }"
+apache_service: "{ 'apache2' si ansible_os_family == 'Debian' sinon 'httpd' }"
+apache_conf_dir: "{ '/etc/apache2/sites-available' si ansible_os_family == 'Debian' sinon '/etc/httpd/conf.d' }"
 php_package: php
-php_mysql_package: "{ 'php-mysql' if ansible_os_family == 'Debian' else 'php-mysqlnd' }"
+php_mysql_package: "{ 'php-mysql' si ansible_os_family == 'Debian' sinon 'php-mysqlnd' }"
 mariadb_package: mariadb-server
 mariadb_service: mariadb
-```
 
-## 🧾 Example Playbook
-
-```yaml
+🧾 Playbook d’exemple
 - hosts: all
   become: true
   roles:
     - Ymed95.wordpress
-```
 
-## 🔧 Handlers
-
-- Reload Apache when needed
-
-```yaml
+🔧 Handlers
+Redémarrage d’Apache si nécessaire :
 - name: Reload Apache
   service:
-    name: "{ apache_service }"
+    name: "{{ apache_service }}"
     state: restarted
-```
 
-## 💡 Compatibility
+💡 Compatibilité
+✅ Debian 10/11/12
+✅ Ubuntu 20.04+
+✅ Rocky Linux 8/9
 
-- ✅ Debian 10/11/12
-- ✅ Ubuntu 20.04+
-- ✅ Rocky Linux 8/9
-
-## 🔗 Install this Role
-
-From Ansible Galaxy:
-
-```bash
+🔗 Installation de ce rôle
+Depuis Ansible Galaxy :
 ansible-galaxy role install Ymed95.wordpress
-```
 
-Or add to your `requirements.yml`:
-
-```yaml
+Ou via requirements.yml :
 - src: Ymed95.wordpress
-```
 
-Then run:
-
-```bash
+Puis :
 ansible-galaxy install -r requirements.yml
-```
 
-## 🧪 Test Locally with Docker
-
-Use Ubuntu or Rocky SSH containers and test with:
-
-```bash
+🧪 Tester localement avec Docker
+Utilisez des conteneurs SSH Ubuntu ou Rocky et testez avec :
 ansible-playbook -i inventory.ini test.yml
-```
-
-## 📅 Last Updated
