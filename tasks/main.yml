@@ -65,7 +65,7 @@
 
 - name: Pause pour laisser MariaDB démarrer
   pause:
-    seconds: 10
+    seconds: 30
 
 - name: Sécurisation de MariaDB - mot de passe root
   community.mysql.mysql_user:
