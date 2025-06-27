@@ -1,0 +1,18 @@
+---
+galaxy_info:
+  role_name: wordpress
+  author: Ymed95
+  description: Déploiement automatique de WordPress + MariaDB sur Ubuntu et Rocky Linux avec Ansible
+  license: MIT
+  min_ansible_version: 2.10
+  platforms:
+    - name: EL
+      versions:
+        - 8
+    - name: Debian
+      versions:
+        - buster
+        - bullseye
+
+dependencies: []
+

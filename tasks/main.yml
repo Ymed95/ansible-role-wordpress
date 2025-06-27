@@ -1,0 +1,147 @@
+---
+- name: Mise à jour des paquets
+  apt:
+    update_cache: yes
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Mise à jour des paquets
+  dnf:
+    update_cache: yes
+  when: ansible_facts['os_family'] == "RedHat"
+
+- name: Installation des paquets nécessaires (Debian)
+  apt:
+    name:
+      - apache2
+      - php
+      - libapache2-mod-php
+      - php-mysql
+      - mariadb-server
+      - wget
+      - unzip
+    state: present
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Installation des paquets nécessaires (RedHat)
+  dnf:
+    name:
+      - httpd
+      - php
+      - php-mysqlnd
+      - mariadb-server
+      - wget
+      - unzip
+    state: present
+  when: ansible_facts['os_family'] == "RedHat"
+
+- name: Installation des paquets nécessaires (RedHat)
+  dnf:
+    name:
+      - httpd
+      - php
+      - php-mysqlnd
+      - mariadb-server
+      - wget
+      - unzip
+    state: present
+  when: ansible_facts['os_family'] == "RedHat"
+
+- name: Supprimer la page par défaut d'Apache
+  file:
+    path: /var/www/html/index.html
+    state: absent
+
+- name: Démarrer Apache
+  shell: |
+    service apache2 start || /usr/sbin/httpd -DFOREGROUND &
+  async: 5
+  poll: 0
+  notify: Reload Apache
+
+- name: Démarrer MariaDB en arrière-plan dans un conteneur
+  shell: mysqld_safe --datadir=/var/lib/mysql &
+  async: 5
+  poll: 0
+
+- name: Pause pour laisser MariaDB démarrer
+  pause:
+    seconds: 10
+
+- name: Sécurisation de MariaDB - mot de passe root
+  community.mysql.mysql_user:
+    name: root
+    host: localhost
+    password: "{{ mariadb_root_password }}"
+    state: present
+    login_user: root
+    login_password: "{{ mariadb_root_password }}"
+
+
+- name: Supprimer les utilisateurs anonymes
+  community.mysql.mysql_user:
+    name: ''
+    host_all: true
+    state: absent
+    login_user: root
+    login_password: "{{ mariadb_root_password }}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+
+- name: Supprimer la base de test si elle existe
+  community.mysql.mysql_db:
+    name: test
+    state: absent
+    login_user: root
+    login_password: "{{ mariadb_root_password }}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+
+- name: Créer la base de données WordPress
+  community.mysql.mysql_db:
+    name: wordpress
+    state: present
+    login_user: root
+    login_password: "{{ mariadb_root_password }}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+
+- name: Créer l'utilisateur WordPress
+  community.mysql.mysql_user:
+    name: "{{ wordpress_db_user }}"
+    password: "{{ wordpress_db_password }}"
+    priv: "{{ wordpress_db_name }}.*:ALL"
+    host: "%"
+    state: present
+    login_user: root
+    login_password: "{{ mariadb_root_password }}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+
+- name: Télécharger WordPress
+  get_url:
+    url: https://wordpress.org/latest.zip
+    dest: /tmp/latest.zip
+
+- name: Décompresser WordPress
+  unarchive:
+    src: /tmp/latest.zip
+    dest: /var/www/html/
+    remote_src: yes
+
+- name: Copier le fichier de config WordPress
+  template:
+    src: wp-config.php.j2
+    dest: /var/www/html/wordpress/wp-config.php
+    owner: www-data
+    group: www-data
+    mode: '0640'
+
+- name: Définir les permissions du dossier WordPress
+  file:
+    path: /var/www/html/wordpress
+    owner: www-data
+    group: www-data
+    recurse: yes
+
+- name: Configurer Apache pour WordPress
+  template:
+    src: wordpress.conf.j2
+    dest: "{{ apache_conf_path }}"
+  notify: Reload Apache
+
